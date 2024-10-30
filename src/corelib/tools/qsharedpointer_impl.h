@@ -113,6 +113,14 @@ namespace QtSharedPointer {
 
         void destroy() { destroyer(this); }
 
+        bool isShared() const noexcept {
+            return strongref.loadRelaxed() != 1;
+        }
+
+        bool needsDetach() const noexcept {
+            return strongref.loadRelaxed() > 1;
+        }
+
 #ifndef QT_NO_QOBJECT
         Q_CORE_EXPORT static ExternalRefCountData *getAndRef(const QObject *);
         Q_CORE_EXPORT void setQObjectShared(const QObject *, bool enable);
@@ -433,6 +441,11 @@ public:
 #undef DECLARE_TEMPLATE_COMPARE_SET
 #undef DECLARE_COMPARE_SET
 
+    bool isShared() const noexcept
+    { return !d || d->isShared(); }
+    bool needsDetach() const noexcept
+    { return !d || d->needsDetach(); }
+
 private:
     explicit QSharedPointer(Qt::Initialization) {}
 
@@ -650,6 +663,11 @@ public:
     { return !p.isNull(); }
     friend bool operator!=(std::nullptr_t, const QWeakPointer &p)
     { return !p.isNull(); }
+
+    bool isShared() const noexcept
+    { return !d || d->isShared(); }
+    bool needsDetach() const noexcept
+    { return !d || d->needsDetach(); }
 
 private:
     friend struct QtPrivate::EnableInternalData;
